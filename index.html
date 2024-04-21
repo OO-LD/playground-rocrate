@@ -573,7 +573,15 @@
                         blob = new Blob([JSON.stringify(metadata_json, null, 2)], {
                             type: "application/json;charset=utf-8"
                         });
+                    downloadBlob(blob, filename);
 
+                }, false);
+            });
+        }
+
+        /* ------------------------------------------------------- downloadBlob */
+
+        var downloadBlob = function (blob, filename) {
                     if (window.navigator && window.navigator.msSaveOrOpenBlob) {
                         window.navigator.msSaveOrOpenBlob(blob, filename);
                     } else {
@@ -588,8 +596,6 @@
                             'cancelable': false
                         }));
                     }
-                }, false);
-            });
         }
 
         /* ------------------------------------------------------- updateDirectLink */
