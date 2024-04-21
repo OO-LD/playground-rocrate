@@ -11,6 +11,7 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.0.6-rc.1/dist/js/select2.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.0.6-rc.1/dist/css/select2.min.css">
     <script src="https://cdn.jsdelivr.net/npm/ace-builds@1.14.0/src-noconflict/mode-json.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
     <link rel='stylesheet' id='theme-link'>
     <link rel='stylesheet' id='iconlib-link'>
@@ -40,6 +41,9 @@
             <div>
                 <a class="btn btn-primary" id="direct-link" title="Generates permalink in the address bar which preserves schema, value, and options">Generate Direct Link</a>
                 <a class="btn btn-secondary" href="?" title="reload editor with default example settings">Reset Playground</a>
+                <a class="btn btn-primary" id="download-archive" title="Generates an archive file containing a ro-crate-metadata.json and all raw data files.">Download RO-Crate ZIP</a>
+                  <div class="file btn btn-primary"  title="Uploads an archive file and extracts ro-crate-metadata.json and all raw data files.">Upload RO-Crate ZIP 
+                    <input id="upload-archive" type="file" name="file"/></div>
             </div>
         </div>
         <div class="row columns md:flex">
@@ -219,6 +223,33 @@
                 }
             }
         }
+
+        // Specify upload handler
+        JSONEditor.defaults.callbacks.upload = {
+            "testUploadHandler" : function(jseditor, type, file, cbs) {
+                console.log(jseditor)
+                var id_editor = jseditor.parent.editors["id"] || jseditor.parent.editors["@id"]
+                var id = id_editor.getValue();
+                if (!id_editor.getValue() || id_editor.getValue() === "") id = file.name;
+
+                zip.file(id, file);
+                cbs.success(id)
+            //cbs.failure('Upload failed');
+            //cbs.updateProgress(tick);
+                if (!id_editor.getValue() || id_editor.getValue() === "") id_editor.setValue(id);
+                zip.file(id).async("blob").then(blob => {
+                    var downloadUrl = URL.createObjectURL(blob);
+                    console.log(downloadUrl);
+
+                    //cbs.success(downloadUrl);
+                    //jseditor.setValue(id);
+                    console.log(document.querySelector("[data-schemapath='" + jseditor.path + "'] a"))
+                    document.querySelector("[data-schemapath='" + jseditor.path + "'] a").setAttribute("href", downloadUrl);
+                });
+                
+            }
+        }
+
         // parse url -> merge options -> refreshUI() -> initJsoneditor() -> direct link
 
         /* ------------------------------------------------------------------- data */
@@ -233,6 +264,9 @@
             theme: 'bootstrap4',
             ajax: true,
             keep_oneof_values: false,
+            upload: {
+                  upload_handler: "testUploadHandler"
+                }
         }
 
         var aceConfig = {
@@ -245,7 +279,11 @@
         }
 
         var jsoneditor = null
+        var zip = null;
+        var zip_root_path = "";
         var directLink = document.querySelector('#direct-link')
+        var downloadArchive = document.querySelector('#download-archive')
+        var uploadArchive = document.querySelector('#upload-archive')
 
         var booleanOptionsSelect = document.querySelector('#boolean-options-select')
         var head = document.getElementsByTagName('head')[0]
@@ -485,6 +523,10 @@
         /* --------------------------------------------------------- initJsoneditor */
 
         var initJsoneditor = function () {
+
+            zip = new JSZip();
+            zip_root_path = "";
+
             // destroy old JSONEditor instance if exists
             if (jsoneditor) {
                 jsoneditor.destroy()
@@ -582,20 +624,20 @@
         /* ------------------------------------------------------- downloadBlob */
 
         var downloadBlob = function (blob, filename) {
-                    if (window.navigator && window.navigator.msSaveOrOpenBlob) {
-                        window.navigator.msSaveOrOpenBlob(blob, filename);
-                    } else {
-                        var a = document.createElement('a');
-                        a.download = filename;
-                        a.href = URL.createObjectURL(blob);
-                        a.dataset.downloadurl = ['text/plain', a.download, a.href].join(':');
+            if (window.navigator && window.navigator.msSaveOrOpenBlob) {
+                window.navigator.msSaveOrOpenBlob(blob, filename);
+            } else {
+                var a = document.createElement('a');
+                a.download = filename;
+                a.href = URL.createObjectURL(blob);
+                a.dataset.downloadurl = ['text/plain', a.download, a.href].join(':');
 
-                        a.dispatchEvent(new MouseEvent('click', {
-                            'view': window,
-                            'bubbles': true,
-                            'cancelable': false
-                        }));
-                    }
+                a.dispatchEvent(new MouseEvent('click', {
+                    'view': window,
+                    'bubbles': true,
+                    'cancelable': false
+                }));
+            }
         }
 
         /* ------------------------------------------------------- updateDirectLink */
@@ -669,6 +711,34 @@
         })
 
         parseUrl()
+
+        uploadArchive.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            console.log(file);
+            JSZip.loadAsync(file) //zip.file(name, ab);
+            .then(zip => {
+                
+                zip.forEach(function (relativePath, zipEntry) {  // 2) print entries
+                    console.log(zipEntry.name);
+                    if (zipEntry.name.split('/').pop().split('.')[0] === "ro-crate-metadata") {
+                        zip_root_path = zipEntry.name.replace(zipEntry.name.split('/').pop(), "")
+                        console.log("ROOT:",  zip_root_path)
+                    }
+                });
+            })
+        }, false);
+
+        downloadArchive.addEventListener('click', function (e) {
+            e.preventDefault();
+            var metadata_json = jsoneditor.getValue();
+            //var filename = metadata_json.name + '.metadata.json';
+            var filename = metadata_json.name + '.zip';
+            zip.file("ro-crate-metadata.json", JSON.stringify(metadata_json, null, 2));
+            zip.generateAsync({ type: "blob" })
+                .then(function (blob) {
+                    downloadBlob(blob, filename);
+                });
+        }, false);
 
     </script>
 </body>
