@@ -588,7 +588,7 @@
                                     var codeMirrorData2 = JSON.parse(codeMirror.getValue());
                                     
                                     jsoneditor.options.schema["@context"] = codeMirrorData2["@context"]; 
-                                    document.getElementById("schema-textarea").setValue(JSON.stringify(jsoneditor.options.schema, null, 2));
+                                    schemaTextarea.setValue(JSON.stringify(jsoneditor.options.schema, null, 2));
                                     var codeMirrorData = JSON.parse(codeMirror.getValue());
                                     delete codeMirrorData["@context"];
                                     if (JSON.stringify(codeMirrorData, null, 2) !== JSON.stringify(jsoneditor.getValue(codeMirrorData), null, 2)) {
