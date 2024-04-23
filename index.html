@@ -12,6 +12,9 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.0.6-rc.1/dist/css/select2.min.css">
     <script src="https://cdn.jsdelivr.net/npm/ace-builds@1.14.0/src-noconflict/mode-json.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/jsonld/1.0.0/jsonld.min.js"></script>-->
+    <!-- version 1.0.0 has different defaults, producing always a graph on frameing and prefixes ids with '/' -->
+    <script src="https://cdn.jsdelivr.net/npm/jsonld@8.3.2/dist/jsonld.min.js"></script>
 
     <link rel='stylesheet' id='theme-link'>
     <link rel='stylesheet' id='iconlib-link'>
@@ -732,8 +735,8 @@
                                     {"id": "@id", "type": "@type"}
                                 ],
                                 "@type": "CreativeWork"
-                            })
-                            .then(metadata_json => jsonld.compact(metadata_json, metadata_json["@context"]))
+                            }, {base: null, omitGraph: true, _compactToRelative: false})
+                            //.then(metadata_json => {console.log(metadata_json); return jsonld.compact(metadata_json, metadata_json["@context"])})
                             .then(metadata_json => {
                                 //console.log(metadata_json);
                                 jsoneditor.options.schema["@context"] = metadata_json["@context"]; 
