@@ -723,6 +723,25 @@
                     if (zipEntry.name.split('/').pop().split('.')[0] === "ro-crate-metadata") {
                         zip_root_path = zipEntry.name.replace(zipEntry.name.split('/').pop(), "")
                         console.log("ROOT:",  zip_root_path)
+
+                        zipEntry.async("text").then(json_str => {
+                            var metadata_json = JSON.parse(json_str);
+                            metadata_json = jsonld.frame(metadata_json, {
+                                "@context": [
+                                    "https://w3id.org/ro/crate/1.1/context",
+                                    {"id": "@id", "type": "@type"}
+                                ],
+                                "@type": "CreativeWork"
+                            })
+                            .then(metadata_json => jsonld.compact(metadata_json, metadata_json["@context"]))
+                            .then(metadata_json => {
+                                //console.log(metadata_json);
+                                jsoneditor.options.schema["@context"] = metadata_json["@context"]; 
+                                schemaTextarea.setValue(JSON.stringify(jsoneditor.options.schema, null, 2));
+                                delete metadata_json["@context"];
+                                jsoneditor.setValue(metadata_json);
+                            });
+                        });
                     }
                 });
             })
