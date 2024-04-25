@@ -230,8 +230,10 @@
         // Specify upload handler
         JSONEditor.defaults.callbacks.upload = {
             "testUploadHandler" : function(jseditor, type, file, cbs) {
-                console.log(jseditor)
-                var id_editor = jseditor.parent.editors["id"] || jseditor.parent.editors["@id"]
+                //console.log(jseditor);
+                var id_editor = jseditor.parent.editors["id"] || jseditor.parent.editors["@id"];
+                var encodingFormat_editor = jseditor.parent.editors["encodingFormat"];
+                if (encodingFormat_editor) encodingFormat_editor.setValue(file.type);
                 var id = id_editor.getValue();
                 if (!id_editor.getValue() || id_editor.getValue() === "") id = file.name;
 
@@ -567,6 +569,48 @@
                 jsonld_data = { ...{ "@context": jsoneditor.options.schema["@context"] }, ...jsonld_data };
 
 
+                var all_editors = [];
+                for (var subeditor_path of Object.keys(jsoneditor.editors)) {
+                    var e = jsoneditor.editors[subeditor_path]
+                    if (e) {
+                        all_editors.push(e)
+                        if (e.editors) all_editors = all_editors.concat(e.editors); // actual multiple editors due to oneOf schema
+                    }
+                }
+
+                for (var subeditor of all_editors) {
+                    if (subeditor.schema?.options?.upload) { // file upload input
+                        var linkElement = document.querySelector("[data-schemapath='" + subeditor.path + "'] a");
+                        if (subeditor.value && subeditor.value !== "" && !linkElement.getAttribute("href").startsWith("blob:")) {
+                            var zipFile = zip.file(zip_root_path + subeditor.value.replace(/^([\.]?\/)/,"")); // remove "./" or "/"
+                            if (zipFile) {
+                                zipFile.async("blob").then((function (blob){
+                                    var subeditor = this;
+                                    var fileOptions = {};
+                                    var encodingFormat_editor = subeditor.parent.editors["encodingFormat"];
+                                    if (encodingFormat_editor && encodingFormat_editor.getValue() !== "") fileOptions["type"] = encodingFormat_editor.getValue();
+                                    blob = new File([blob], subeditor.value, fileOptions)
+                                    var downloadUrl = URL.createObjectURL(blob);
+                                    //if (fileOptions["type"] && (fileOptions["type"].startsWith("image/") || fileOptions["type"].startsWith("video/"))) {
+                                        var a = new FileReader();
+                                        a.onload = (e) => {
+                                            //callback(e.target.result);
+                                            subeditor.preview_value =  e.target.result;
+                                            //subeditor.refreshPreview([new File([blob], subeditor.value, fileOptions)]);
+                                            subeditor.refreshPreview([blob]);
+                                            //document.querySelector("[data-schemapath='" + subeditor.path + "'] a").setAttribute("href", downloadUrl);
+                                        }
+                                        a.readAsDataURL(blob);
+                                    //}
+                                    //else subeditor.refreshPreview([blob]);
+                                    console.log(downloadUrl);
+                                    //console.log(document.querySelector("[data-schemapath='" + subeditor.path + "'] a"))
+                                    document.querySelector("[data-schemapath='" + subeditor.path + "'] a").setAttribute("href", downloadUrl);
+                                }).bind(subeditor));
+                            }
+                        }
+                    }
+                }
 
                 // simulate input within the json-ld playground iframe input with id="markup"
                 var jsonldPlaygroundIframe = document.getElementById("json-ld-playground-iframe")
