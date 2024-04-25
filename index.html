@@ -779,14 +779,19 @@
                                     {"id": "@id", "type": "@type"}
                                 ],
                                 "@type": "CreativeWork"
-                            }, {base: null, omitGraph: true, _compactToRelative: false})
+                            }, {base: null, omitGraph: false, compactArrays: true, _compactToRelative: false})
+                            // note: json-editor will transform non-array values to arrays if defined in the schema 
                             //.then(metadata_json => {console.log(metadata_json); return jsonld.compact(metadata_json, metadata_json["@context"])})
                             .then(metadata_json => {
                                 //console.log(metadata_json);
+                                var jsondata = metadata_json;
+                                for (var node of metadata_json["@graph"]) {
+                                    if (node["id"] === "ro-crate-metadata.json") jsondata = node 
+                                }
                                 jsoneditor.options.schema["@context"] = metadata_json["@context"]; 
                                 schemaTextarea.setValue(JSON.stringify(jsoneditor.options.schema, null, 2));
                                 delete metadata_json["@context"];
-                                jsoneditor.setValue(metadata_json);
+                                jsoneditor.setValue(jsondata);
                             });
                         });
                     }
