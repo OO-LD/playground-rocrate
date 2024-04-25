@@ -235,12 +235,12 @@
                 var id = id_editor.getValue();
                 if (!id_editor.getValue() || id_editor.getValue() === "") id = file.name;
 
-                zip.file(id, file);
+                zip.file(zip_root_path + id.replace(/^([\.]?\/)/,""), file);
                 cbs.success(id)
             //cbs.failure('Upload failed');
             //cbs.updateProgress(tick);
                 if (!id_editor.getValue() || id_editor.getValue() === "") id_editor.setValue(id);
-                zip.file(id).async("blob").then(blob => {
+                zip.file(zip_root_path + id.replace(/^([\.]?\/)/,"")).async("blob").then(blob => {
                     var downloadUrl = URL.createObjectURL(blob);
                     console.log(downloadUrl);
 
@@ -756,7 +756,7 @@
             jsonld_data = { ...{ "@context": jsoneditor.options.schema["@context"] }, ...jsonld_data };
             //var filename = metadata_json.name + '.metadata.json';
             var filename = jsonld_data.name + '.zip';
-            zip.file("ro-crate-metadata.json", JSON.stringify(jsonld_data, null, 2));
+            zip.file(zip_root_path + "ro-crate-metadata.json", JSON.stringify(jsonld_data, null, 2));
             zip.generateAsync({ type: "blob" })
                 .then(function (blob) {
                     downloadBlob(blob, filename);
