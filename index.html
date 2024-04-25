@@ -719,8 +719,8 @@
             const file = e.target.files[0];
             console.log(file);
             JSZip.loadAsync(file) //zip.file(name, ab);
-            .then(zip => {
-                
+            .then(_zip => {
+                zip = _zip;
                 zip.forEach(function (relativePath, zipEntry) {  // 2) print entries
                     console.log(zipEntry.name);
                     if (zipEntry.name.split('/').pop().split('.')[0] === "ro-crate-metadata") {
