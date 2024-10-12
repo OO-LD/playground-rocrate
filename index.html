@@ -331,6 +331,8 @@
                             console.log("Error while parsing direct link: " + reason)
                         }
                     }
+
+                    if (param === 'fileUrl') data.fileUrl = value
                 })
             }
 
@@ -342,6 +344,8 @@
         var mergeOptions = function () {
             data.options = Object.assign(defaultOptions, data.options)
             refreshUI()
+
+            if (data.fileUrl) downloadZipFromUrl(data.fileUrl);
         }
 
         /* -------------------------------------------------------------- refreshUI */
@@ -687,6 +691,55 @@
             }
         }
 
+        var loadZipFile = function(file) {
+            console.log(file);
+            JSZip.loadAsync(file) //zip.file(name, ab);
+            .then(_zip => {
+                zip = _zip;
+                zip.forEach(function (relativePath, zipEntry) {  // 2) print entries
+                    console.log(zipEntry.name);
+                    if (zipEntry.name.split('/').pop().split('.')[0] === "ro-crate-metadata") {
+                        zip_root_path = zipEntry.name.replace(zipEntry.name.split('/').pop(), "")
+                        console.log("ROOT:",  zip_root_path)
+
+                        zipEntry.async("text").then(json_str => {
+                            var metadata_json = JSON.parse(json_str);
+                            metadata_json = jsonld.frame(metadata_json, {
+                                "@context": [
+                                    "https://w3id.org/ro/crate/1.1/context",
+                                    {"id": "@id", "type": "@type"}
+                                ],
+                                "@type": "CreativeWork"
+                            }, {base: null, omitGraph: false, compactArrays: true, _compactToRelative: false})
+                            // note: json-editor will transform non-array values to arrays if defined in the schema 
+                            //.then(metadata_json => {console.log(metadata_json); return jsonld.compact(metadata_json, metadata_json["@context"])})
+                            .then(metadata_json => {
+                                //console.log(metadata_json);
+                                var jsondata = metadata_json;
+                                for (var node of metadata_json["@graph"]) {
+                                    if (node["id"] === "ro-crate-metadata.json") jsondata = node 
+                                }
+                                jsoneditor.options.schema["@context"] = metadata_json["@context"]; 
+                                schemaTextarea.setValue(JSON.stringify(jsoneditor.options.schema, null, 2));
+                                delete metadata_json["@context"];
+                                jsoneditor.setValue(jsondata);
+                            });
+                        });
+                    }
+                });
+            })
+        }
+
+        var downloadZipFromUrl = function (url) {
+            fetch(url) //Fetch the .zip file
+                .then(response => { //Check if the response headers indicate a zip file
+                    const contentType = response.headers.get('content-type');
+                    return response.blob();
+                }).then(blob => { //Extract the contents of the zip file
+                    loadZipFile(blob);
+                }
+        }
+
         /* ------------------------------------------------------- updateDirectLink */
 
         var updateDirectLink = function () {
@@ -761,42 +814,7 @@
 
         uploadArchive.addEventListener('change', (e) => {
             const file = e.target.files[0];
-            console.log(file);
-            JSZip.loadAsync(file) //zip.file(name, ab);
-            .then(_zip => {
-                zip = _zip;
-                zip.forEach(function (relativePath, zipEntry) {  // 2) print entries
-                    console.log(zipEntry.name);
-                    if (zipEntry.name.split('/').pop().split('.')[0] === "ro-crate-metadata") {
-                        zip_root_path = zipEntry.name.replace(zipEntry.name.split('/').pop(), "")
-                        console.log("ROOT:",  zip_root_path)
-
-                        zipEntry.async("text").then(json_str => {
-                            var metadata_json = JSON.parse(json_str);
-                            metadata_json = jsonld.frame(metadata_json, {
-                                "@context": [
-                                    "https://w3id.org/ro/crate/1.1/context",
-                                    {"id": "@id", "type": "@type"}
-                                ],
-                                "@type": "CreativeWork"
-                            }, {base: null, omitGraph: false, compactArrays: true, _compactToRelative: false})
-                            // note: json-editor will transform non-array values to arrays if defined in the schema 
-                            //.then(metadata_json => {console.log(metadata_json); return jsonld.compact(metadata_json, metadata_json["@context"])})
-                            .then(metadata_json => {
-                                //console.log(metadata_json);
-                                var jsondata = metadata_json;
-                                for (var node of metadata_json["@graph"]) {
-                                    if (node["id"] === "ro-crate-metadata.json") jsondata = node 
-                                }
-                                jsoneditor.options.schema["@context"] = metadata_json["@context"]; 
-                                schemaTextarea.setValue(JSON.stringify(jsoneditor.options.schema, null, 2));
-                                delete metadata_json["@context"];
-                                jsoneditor.setValue(jsondata);
-                            });
-                        });
-                    }
-                });
-            })
+            loadZipFile(file);
         }, false);
 
         downloadArchive.addEventListener('click', function (e) {
