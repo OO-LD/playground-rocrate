@@ -64,19 +64,23 @@
                 <p>Below is the editor generated from the JSON Schema. Changes are synced with the JSON-LD playground (and vice versa).</p>
                 <div id="json-editor-form" class="json-editor-compact"></div>
             </div>
-            <div class='col-2 col-md-2 w-2/12' style="display: none;">
+            <div class='col-4 col-md-4 w-4/12'>
                 <h2>JSON Output</h2>
                 <p>You can also make changes to the JSON here and set the value in the editor by clicking "Update Form"
                 </p>
                 <label for="output-textarea"></label>
                 <button class='btn btn-primary btn-block' id='setvalue'>Update Form</button>
-                <textarea id='output-textarea' rows="15" style="width: 100%; font-family: monospace;"
+                <textarea id='output-textarea' rows="15" style="width: 100%; height: 350px; font-family: monospace;"
                     class='form-control'></textarea>
                 <h2>Validation</h2>
                 <label for="validate-textarea">This will update whenever the form changes to show validation errors if
                     there
                     are any.</label><br>
-                <textarea id='validate-textarea' readonly disabled class='form-control'></textarea>
+                <textarea id='validate-textarea' rows="15" style="height: 350px;" readonly disabled class='form-control'></textarea>
+                <h2>3. JSON-LD</h1>
+                <p>JSON originates from the Form-Editor while the context is extracted from the schema. Scroll down to see processed forms, e. g. RDF.
+                </p>
+                <iframe id="json-ld-playground-iframe" src="./json-ld/playground/" style="width: 100%; height: 100%; border: none;"></iframe>
                 <div style="display: none">
                     <h2>Options</h2>
                     <div>
@@ -157,11 +161,7 @@
                     </div>
                 </div>
             </div>
-            <div class='col-4 col-md-4 w-4/12'>
-                <h1>3. JSON-LD</h1>
-                <p>JSON originates from the Form-Editor while the context is extracted from the schema. Scroll down to see processed forms, e. g. RDF.
-                </p>
-                <iframe id="json-ld-playground-iframe" src="./json-ld/playground/" style="width: 100%; height: 100%; border: none;"></iframe>
+            <div class='col-4 col-md-4 w-4/12' style="display: none;">
             </div>
         </div>
     </div>
