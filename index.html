@@ -698,7 +698,8 @@
                 zip = _zip;
                 zip.forEach(function (relativePath, zipEntry) {  // 2) print entries
                     console.log(zipEntry.name);
-                    if (zipEntry.name.split('/').pop().split('.')[0] === "ro-crate-metadata") {
+                    // note: RO-Crate 1.0 allows .jsonld files, 1.1 only .json
+                    if (zipEntry.name.split('/').pop() === "ro-crate-metadata.json" || zipEntry.name.split('/').pop() === "ro-crate-metadata.jsonld") {
                         zip_root_path = zipEntry.name.replace(zipEntry.name.split('/').pop(), "")
                         console.log("ROOT:",  zip_root_path)
 
