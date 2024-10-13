@@ -1,0 +1,273 @@
+{
+  "@context": [
+    "https://w3id.org/ro/crate/1.1/context",
+    {
+      "id": "@id",
+      "type": "@type"
+    }
+  ],
+  "title": "RO-Crate",
+  "type": "object",
+  "version: "0.1.0",
+  "required": [
+    "id",
+    "type",
+    "conformsTo",
+    "sdPublisher"
+  ],
+  "definitions": {
+    "Thing": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "default": "Thing"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+    "Organization": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/Thing"
+        }
+      ],
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "default": "Organization"
+        },
+        "url": {
+          "type": "string",
+          "format": "url"
+        },
+        "areaServed": {
+          "type": "string"
+        },
+        "slogan": {
+          "type": "string"
+        },
+        "logo": {
+          "type": "string",
+          "format": "url",
+          "links": [
+            {
+              "href": "{{self}}",
+              "type": "img/png"
+            }
+          ]
+        },
+        "parentOrganization": {
+          "$ref": "#/definitions/Organization"
+        }
+      },
+      "options": {
+        "display_required_only": true
+      }
+    },
+    "Person": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/Thing"
+        }
+      ],
+      "title": "Person",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email"
+        },
+        "familyName": {
+          "type": "string"
+        },
+        "givenName": {
+          "type": "string"
+        }
+      }
+    },
+    "CreativeWork": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/Thing"
+        }
+      ],
+      "title": "CreativeWork",
+      "type": "object",
+      "properties": {
+    "dateCreated": {
+      "type": "string",
+      "format": "datetime-local",
+      "options": {
+        "flatpickr": {}
+      }
+    },
+    "dateModified": {
+      "type": "string",
+      "format": "datetime-local",
+      "options": {
+        "flatpickr": {}
+      }
+    },
+        "keywords": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "File": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CreativeWork"
+        }
+      ],
+      "title": "File",
+      "type": "object",
+      "id": "file",
+      "required": [
+        "type",
+        "id"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "File"
+          ]
+        },
+        "_id": {
+          "type": "string"
+        },
+        "encodingFormat": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string",
+          "format": "url",
+          "options": {
+            "upload": {
+              "upload_handler": "testUploadHandler"
+            }
+          },
+          "links": [
+            {
+              "href": "dummy",
+              "rel": "view / download"
+            }
+          ]
+        }
+      },
+      "not": { "required": [ "hasPart" ] },
+      "options": {
+        "display_required_only": true
+      }
+    },
+    "Dataset": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CreativeWork"
+        }
+      ],
+      "title": "Dataset",
+      "type": "object",
+      "required": [
+        "type",
+        "id"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "Dataset"
+          ]
+        },
+        "about": {
+          "$ref": "#/definitions/Thing"
+        },
+        "hasPart": {
+          "type": "array",
+          "format": "tabs",
+          "items": {
+        "discriminator": {
+        "propertyName": "type",
+        "mapping": {
+          "File": "#/definitions/File",
+          "Dataset": "#/definitions/Dataset"
+        }
+      },
+            "oneOf": [
+              {
+                "$ref": "#/definitions/File"
+              },
+              {
+                "$ref": "#/definitions/Dataset"
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "display_required_only": true
+      }
+    }
+  },
+  "properties": {
+    "id": {
+      "type": "string",
+      "enum": [
+        "ro-crate-metadata.json"
+      ]
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "CreativeWork"
+      ]
+    },
+    "conformsTo": {
+      "type": "string",
+      "enum": [
+        "https://w3id.org/ro/crate/1.1"
+      ]
+    },
+    "version": {
+      "type": "string"
+    },
+    "sdPublisher": {
+      "$ref": "#/definitions/Organization"
+    },
+    "about": {
+      "$ref": "#/definitions/Dataset",
+      "properties": {
+        "id": {
+          "enum": [
+            "./"
+          ]
+        }
+      },
+      "default": {
+        "hasPart": []
+      }
+    }
+  },
+  "options": {
+    "_display_required_only": true
+  }
+}
