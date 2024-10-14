@@ -313,6 +313,7 @@
             var queryParamsString = url.substring(1, url.length)
             var queryParams = queryParamsString.split('&')
 
+            var fileUrl = "";
             if (queryParamsString.length) {
                 queryParams.forEach(function (queryParam) {
                     var splittedParam = queryParam.split('=')
@@ -332,9 +333,10 @@
                         }
                     }
 
-                    if (param === 'fileUrl') data.fileUrl = value
+                    if (param === 'fileUrl') fileUrl = value;
                 })
             }
+            if (fileUrl !== "") data.fileUrl = fileUrl;
 
             mergeOptions()
         }
